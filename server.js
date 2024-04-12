@@ -1,5 +1,5 @@
 /**
- * Creating apiExpress
+ * Creating api/experiences
  * Av Maamoun Okla
  */
 

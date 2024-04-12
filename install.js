@@ -1,13 +1,13 @@
 /**
- * Database "cv" installation script
+ * Anslutning till Database "cv" 
  * By Maamoun Okla
  */
 const mysql = require("mysql");
 
-// Include dotenv to read .env files
+//
 require("dotenv").config();
 
-// Create a connection to the MySQL database
+// Skapa anslutningen till "cv" med env.variabler
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -15,7 +15,7 @@ const connection = mysql.createConnection({
     database: process.env.DB_DATABASE,
 });
 
-// Connect to the MySQL database
+// Anslutning till MySQL Database
 connection.connect((err) => {
     if (err) {
         console.error("Error connecting to MySQL database:", err);
@@ -23,7 +23,7 @@ connection.connect((err) => {
     }
     console.log("Connected to MySQL database");
   
-    // Create the table workExperience in the MySQL "cv" database
+    // Skapa workExperience Tabellen
     connection.query(`
         CREATE TABLE IF NOT EXISTS workExperience (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -41,7 +41,7 @@ connection.connect((err) => {
         }
         console.log("workExperience table created successfully");
       
-        // Close the MySQL connection after creating the table
+        // Stäng MySQL anslutning
         connection.end((err) => {
             if (err) {
                 console.error("Error closing MySQL connection:", err);
