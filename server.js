@@ -11,12 +11,12 @@ require("dotenv").config();
 const cors = require('cors');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // Aktivera CORS middleware för alla rutter
 app.use(cors());
 
-//Connect to database
+//Ansluta till databasen
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -41,7 +41,7 @@ app.get("/api", (req, res) => {
 });
 
 app.get("/api/experiences", (req, res) => {
-    //get workExperience
+    //hämta work experience tabellen
     connection.query(`SELECT * FROM workExperience`, (err, results) => {
         if (err) {
             res.status(500).json({ error: "Something went wrong" + err });
@@ -65,33 +65,19 @@ app.post("/api/experiences", (req, res) => {
     const startdate = req.body.startdate;
     const enddate = req.body.enddate;
     const description = req.body.description;
-    //Kontrollera input (i och med att det är många input fält skapas en array istället): 
-    //Skapa en fält array
-    const requiredFields = ['name', 'title', 'location', 'startdate', 'enddate', 'description'];
 
-    //En array för att lagra saknade fält
-    const missingFields = [];
+    //Kontrollera/Validera input
 
-    // Kontrollera om varje obligatoriskt fält finns med
-    requiredFields.forEach(input => {
-        if (!req.body[input]) {
-            missingFields.push(input);
-        }
-    });
-
-    //Returnera vilken input som saknar text
-    if (missingFields.length > 0) {
-        const error = {
-            message: "Fyll i alla input-fält",
-            detail: `Följande fält krävs: ${requiredFields.join(', ')}`,
+    if (!companyname || !jobtitle || !location || !startdate || !enddate || !description) {
+        return res.status(400).json({
+            message: "All fields are required",
+            detail: "Please fill in all fields",
             http_response: {
-                message: "Bad Requist",
+                message: "Bad Request",
                 code: 400
             }
-        };
-        return res.status(400).json(error);
-    } else {
-
+        });
+    }else{
         connection.query(`INSERT INTO workExperience(companyname, jobtitle,location, startdate, enddate, description) VALUES(?,?,?,?,?,?);`, [companyname, jobtitle, location, startdate, enddate, description], (err, results) => {
             if (err) {
                 res.status(500).json({ error: "Something went wrong" + err });
@@ -106,15 +92,49 @@ app.post("/api/experiences", (req, res) => {
                 enddate : enddate,
                 description : description,
             };
-
+            
             res.json({ message: "Experience added", experience });
-              });
+        });
     }
-});
+}
+);
 
 app.put("/api/experiences/:id", (req, res) => {
-    res.json({ message: "PUT request to /experience - with id: " + req.params.id });
+    const experienceId = req.params.id;
+   //Hämta variablerna från request body 
+   const { companyname, jobtitle, location, startdate, enddate, description } = req.body;
+
+
+    //kontrollera om alla krävda fält har ett värde
+    if (!companyname || !jobtitle || !location || !startdate || !enddate || !description) {
+        return res.status(400).json({
+            message: "All fields are required",
+            detail: "Please fill in all fields",
+            http_response: {
+                message: "Bad Request",
+                code: 400
+            }
+        });
+    }
+
+    // uppdatera workexperience tabellen med nya input data
+    connection.query(
+        `UPDATE workExperience SET companyname = ?, jobtitle = ?, location = ?, startdate = ?, enddate = ?, description = ? WHERE id = ?`,
+        [companyname, jobtitle, location, startdate, enddate, description, experienceId],
+        (err, results) => {
+            if (err) {
+                res.status(500).json({ error: "Something went wrong" + err });
+                return;
+            }
+            if (results.affectedRows === 0) {
+                res.status(404).json({ error: `No experience found with id ${experienceId}` });
+                return;
+            }
+            res.json({ message: "Experience updated", id: experienceId });
+        }
+    );
 });
+
 
 app.delete("/api/experiences/:id", (req, res) => {
     const experienceId = req.params.id;
